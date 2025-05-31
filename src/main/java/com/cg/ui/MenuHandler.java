@@ -69,6 +69,11 @@ public class MenuHandler {
         System.out.println("\n=== Main Menu ===");
         System.out.println("Welcome, " + currentUser.getName() + " (" + currentUser.getRole() + ")");
         
+        // Show delivery status for delivery personnel at the top
+        if ("DELIVERY".equalsIgnoreCase(currentUser.getRole())) {
+            showDeliveryStatus();
+        }
+        
         if ("CUSTOMER".equalsIgnoreCase(currentUser.getRole())) {
             showCustomerMenu();
         } else if ("MANAGER".equalsIgnoreCase(currentUser.getRole())) {
@@ -82,6 +87,27 @@ public class MenuHandler {
         
         int choice = getIntInput();
         handleMenuChoice(choice);
+    }
+    
+    private void showDeliveryStatus() {
+        System.out.println("\n=== Your Delivery Status ===");
+        List<Order> assignedOrders = orderService.getOrdersByDeliveryPersonId(currentUser.getId());
+        
+        if (assignedOrders.isEmpty()) {
+            System.out.println("No deliveries assigned to you currently.");
+        } else {
+            System.out.println("Assigned Deliveries:");
+            for (Order order : assignedOrders) {
+                if (!"COMPLETED".equalsIgnoreCase(order.getStatus())) {
+                    System.out.println("- Order ID: " + order.getOrderId() + 
+                                     " | Customer ID: " + order.getCustomerId() + 
+                                     " | Status: " + order.getStatus() + 
+                                     " | Amount: $" + String.format("%.2f", order.getTotalAmount()));
+                }
+            }
+        }
+        System.out.println("Availability: " + (currentUser.isAvailable() ? "AVAILABLE" : "BUSY"));
+        System.out.println("=============================");
     }
     
     private void showCustomerMenu() {
@@ -207,6 +233,15 @@ public class MenuHandler {
             return;
         }
         
+        // Check if user ID already exists
+        try {
+            userService.getUserById(id);
+            System.out.println("Error: User ID already exists. Please choose a different ID.");
+            return;
+        } catch (UserNotFoundException e) {
+            // ID doesn't exist, which is good - we can proceed
+        }
+        
         String name = InputValidator.getValidInput(scanner, "Enter Name: ", "Name cannot be empty.");
         
         String email;
@@ -246,6 +281,15 @@ public class MenuHandler {
         if (!InputValidator.isValidId(id)) {
             System.out.println("Invalid ID format.");
             return;
+        }
+        
+        // Check if user ID already exists
+        try {
+            userService.getUserById(id);
+            System.out.println("Error: User ID already exists. Please choose a different ID.");
+            return;
+        } catch (UserNotFoundException e) {
+            // ID doesn't exist, which is good - we can proceed
         }
         
         String name = InputValidator.getValidInput(scanner, "Enter Name: ", "Name cannot be empty.");
@@ -298,6 +342,14 @@ public class MenuHandler {
     }
     
     private void placeOrder() throws InvalidOrderException {
+        // Check if delivery personnel are available before taking order
+        List<User> availableDeliveryPersons = userService.getAvailableDeliveryPersons();
+        if (availableDeliveryPersons.isEmpty()) {
+            System.out.println("Sorry! No delivery personnel are available right now. Orders cannot be placed at this time.");
+            System.out.println("Please try again later when delivery staff becomes available.");
+            return;
+        }
+        
         displayMenu();
         
         Map<String, Integer> orderItems = new HashMap<>();
@@ -432,8 +484,18 @@ public class MenuHandler {
     }
     
     private void viewMyDeliveries() {
-        // Implementation for delivery person to view assigned orders
-        System.out.println("Feature coming soon - View My Deliveries");
+        System.out.println("\n=== My Assigned Deliveries ===");
+        List<Order> assignedOrders = orderService.getOrdersByDeliveryPersonId(currentUser.getId());
+        
+        if (assignedOrders.isEmpty()) {
+            System.out.println("No deliveries assigned to you.");
+            return;
+        }
+        
+        for (Order order : assignedOrders) {
+            System.out.println(orderService.getOrderDetails(order.getOrderId()));
+            System.out.println("------------------------");
+        }
     }
     
     private void completeOrder() throws InvalidOrderException {

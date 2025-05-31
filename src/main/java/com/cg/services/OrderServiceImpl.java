@@ -118,6 +118,11 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
+    public List<Order> getOrdersByDeliveryPersonId(String deliveryPersonId) {
+        return orderDao.getOrdersByDeliveryPersonId(deliveryPersonId);
+    }
+    
+    @Override
     public String getOrderDetails(String orderId) {
         Order order = orderDao.getOrderById(orderId);
         if (order == null) {
@@ -140,4 +145,3 @@ public class OrderServiceImpl implements OrderService {
         return details.toString();
     }
 }
-

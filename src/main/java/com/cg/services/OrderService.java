@@ -11,5 +11,6 @@ public interface OrderService {
     void completeOrder(String orderId) throws InvalidOrderException;
     Order getOrderById(String orderId);
     List<Order> getOrdersByCustomerId(String customerId);
+    List<Order> getOrdersByDeliveryPersonId(String deliveryPersonId);
     String getOrderDetails(String orderId);
 }

@@ -3,6 +3,7 @@ package com.cg.dao;
 import com.cg.dto.Order;
 import com.cg.utils.CollectionUtil;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class OrderDaoImpl implements OrderDao {
@@ -34,5 +35,10 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public void updateOrder(Order order) {
         CollectionUtil.addOrder(order);
+    }
+    @Override
+    public List<Order> getAllOrders() {
+        Map<String, Order> orders = CollectionUtil.getOrders();
+        return orders.values().stream().collect(Collectors.toList());
     }
 }
